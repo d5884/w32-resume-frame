@@ -130,12 +130,14 @@ into windows registry."
 	(let ((value (if framep
 			 (frame-parameter nil param)
 		       (symbol-value param))))
-	  (when (integerp value)
-	    (w32-resume--add-registry value-name (format "%d" value)))))
+	  (if value
+	      (w32-resume--add-registry value-name (prin1-to-string value t))
+	    (w32-resume--delete-registry value-name))))
        ((eq type 'func)
 	(let ((result (ignore-errors (funcall param))))
-	  (when result
-	    (w32-resume--add-registry value-name result))))
+	  (if result
+	      (w32-resume--add-registry value-name result)
+	    (w32-resume--delete-registry value-name))))
        
        ))))
 
