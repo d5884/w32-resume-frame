@@ -35,16 +35,16 @@
 (defvar w32-resume-emacs-registry-key "HKCU\\Software\\GNU\\Emacs"
   "A registry key for Emacs.")
 
+(defvar w32-resume-storing-status-name "W32_RESUME_FRAME_USING"
+  "A value name of package using status on windows registry.")
+
 (defvar w32-resume-registry-value-alist
   '(("Emacs.Geometry"           func   w32-resume--geometry-encoder)
-    ;; ("Emacs.Font"               func   w32-resume-font-encoder)
-    ;; ("Emacs.LineSpacing"        func   w32-resume-line-space-encoder)
-    ;; ("Emacs.Fullscreen"         func   w32-resume-fullscreen-encoder)
     ("Emacs.ToolBar"            bool   tool-bar-mode)
     ("Emacs.MenuBar"            bool   menu-bar-mode)
     ("Emacs.VerticalScrollBars" bool   scroll-bar-mode)
-    ("Emacs.ScrollBarWidth"     [int]  scroll-bar-width)
-    ;; ("Emacs.Alpha"              func   w32-resume-alpha-encoder)
+    ("Emacs.ScrollBarWidth"     [obj]  scroll-bar-width)
+    ("Emacs.LineSpacing"        [obj]  line-spacing)
     )
   "Alist of registry value and value encoding method.
 An element consists of (VALUE-NAME METHOD PARAM).
@@ -52,7 +52,7 @@ VALUE-NAME is a registry value name string.
 METHOD is a symbol how to store PARAM value:
 func - PARAM as function. A return value will be stored.
 bool - PARAM value as boolean.
-int  - PARAM value as integer.
+obj  - PARAM value as object.
 If method is vector, PARAM will be handled as frame parameter.")
 
 (defconst w32-resume-xrdb-true-value "on"
@@ -126,7 +126,7 @@ into windows registry."
 				   (if framep
 				       (frame-parameter nil param)
 				     (symbol-value param)))))
-       ((eq type 'int)
+       ((eq type 'obj)
 	(let ((value (if framep
 			 (frame-parameter nil param)
 		       (symbol-value param))))
