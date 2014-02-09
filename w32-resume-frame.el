@@ -25,8 +25,12 @@
 
 ;;; Code:
 
+(defgroup w32-resume-frame nil "Resume frame geometry for NTEmacs."
+  :group 'frame)
+
 (defcustom w32-resume-reg-program (executable-find "reg")
-  "Path for reg.exe executable.")
+  "Path for reg.exe executable."
+  :group 'w32-resume-frame)
 
 (defvar w32-resume-emacs-registry-key "HKCU\\Software\\GNU\\Emacs"
   "A registry key for Emacs.")
