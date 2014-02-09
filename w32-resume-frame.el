@@ -107,9 +107,31 @@ in windows registry."
 		       (regexp-quote value-name)) nil t)
 	  (match-string-no-properties 1))))))
 
+(defvar w32-resume-stored-status-cache nil
+  "Cache for `w32-resume-stored-p' function result.")
+
+(defun w32-resume-stored-p ()
+  "Return non-nil if frame status stored in windows registry."
+  (when (eq 1 (or w32-resume-stored-status-cache
+		  (setq w32-resume-stored-status-cache
+			(if (w32-resume--query-registry w32-resume-storing-status-name)
+			    1 0))))
+    t))
+
+(defun w32-resume--storing-status-on ()
+  "Turn on storing status."
+  (w32-resume--add-registry w32-resume-storing-status-name "")
+  (setq w32-resume-stored-status-cache nil))
+
+(defun w32-resume--storing-status-off ()
+  "Turn off storing status."
+  (w32-resume--delete-registry w32-resume-storing-status-name)
+  (setq w32-resume-stored-status-cache nil))
+
 (defun w32-resume--store-frame-status ()
   "Store frame status values described by `w32-resume-registry-value-alist'
 into windows registry."
+  (w32-resume--storing-status-on)
   (dolist (cur w32-resume-registry-value-alist)
     (let ((value-name (car cur))
 	  (type (cadr cur))
