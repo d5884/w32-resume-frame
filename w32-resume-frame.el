@@ -1,4 +1,4 @@
-;;; w32-resume-frame.el --- Resume frame size and position for NTEmacs.
+;;; w32-resume-frame.el --- Resume frame geometry for NTEmacs.
 
 ;; Copyright (C) 2014  Daisuke Kobayashi
 
