@@ -107,6 +107,18 @@ in windows registry."
 		       (regexp-quote value-name)) nil t)
 	  (match-string-no-properties 1))))))
 
+(defun w32-resume-activate ()
+  "Activate storing frame statuses."
+  (interactive)
+  (add-hook 'kill-emacs-hook 'w32-resume--store-frame-status))
+
+(defun w32-resume-deactivate ()
+  "Deactivate storing frame statuses."
+  (interactive)
+  (w32-resume--storing-status-off)
+  (w32-resume--clean-frame-status)
+  (remove-hook 'kill-emacs-hook 'w32-resume--store-frame-status))
+
 (defvar w32-resume-stored-status-cache nil
   "Cache for `w32-resume-stored-p' function result.")
 
