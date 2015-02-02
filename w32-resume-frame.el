@@ -28,18 +28,18 @@
 (defgroup w32-resume-frame nil "Resume frame geometry for NTEmacs."
   :group 'frame)
 
-(defcustom w32-resume-reg-program (executable-find "reg")
+(defcustom w32-resume-frame-reg-program (executable-find "reg")
   "Path for reg.exe executable."
   :group 'w32-resume-frame)
 
-(defvar w32-resume-emacs-registry-key "HKCU\\Software\\GNU\\Emacs"
+(defvar w32-resume-frame-emacs-registry-key "HKCU\\Software\\GNU\\Emacs"
   "A registry key for Emacs.")
 
-(defvar w32-resume-storing-status-name "W32_RESUME_FRAME_USING"
+(defvar w32-resume-frame-storing-status-name "W32_RESUME_FRAME_USING"
   "A value name of package using status on windows registry.")
 
-(defvar w32-resume-registry-value-alist
-  '(("Emacs.Geometry"           func   w32-resume--geometry-encoder)
+(defvar w32-resume-frame-registry-value-alist
+  '(("Emacs.Geometry"           func   w32-resume-frame--geometry-encoder)
     ("Emacs.ToolBar"            bool   tool-bar-mode)
     ("Emacs.MenuBar"            bool   menu-bar-mode)
     ("Emacs.VerticalScrollBars" bool   scroll-bar-mode)
@@ -55,49 +55,49 @@ bool - PARAM value as boolean.
 obj  - PARAM value as object.
 If method is vector, PARAM will be handled as frame parameter.")
 
-(defconst w32-resume-xrdb-true-value "on"
+(defconst w32-resume-frame-xrdb-true-value "on"
   "True value on xrdb.")
 
-(defconst w32-resume-xrdb-false-value "off"
+(defconst w32-resume-frame-xrdb-false-value "off"
   "False value on xrdb.")
 
-(defun w32-resume--bool-encoder (value)
+(defun w32-resume-frame--bool-encoder (value)
   "Encode boolean value into xrdb notation."
   (if value
-      w32-resume-xrdb-true-value
-    w32-resume-xrdb-false-value))
+      w32-resume-frame-xrdb-true-value
+    w32-resume-frame-xrdb-false-value))
 
-(defun w32-resume--geometry-encoder ()
+(defun w32-resume-frame--geometry-encoder ()
   "Encode current frame's geometry data into xrdb notation."
-  (format "%dx%d+%d+%d"
+  (format "%dx%d%+d%+d"
 	  (frame-width) (frame-height)
 	  (frame-parameter (selected-frame) 'left)
 	  (frame-parameter (selected-frame) 'top)))
 
-(defun w32-resume--add-registry (value-name value-string)
-  "Store VALUE-STRING into VALUE-NAME on `w32-resume-emacs-registry-key'
+(defun w32-resume-frame--add-registry (value-name value-string)
+  "Store VALUE-STRING into VALUE-NAME on `w32-resume-frame-emacs-registry-key'
 in windows registry."
-  (call-process w32-resume-reg-program nil nil nil
-		"add" w32-resume-emacs-registry-key
+  (call-process w32-resume-frame-reg-program nil nil nil
+		"add" w32-resume-frame-emacs-registry-key
 		"/v" value-name
 		"/t" "REG_SZ"
 		"/d" value-string
 		"/f"))
 
-(defun w32-resume--delete-registry (value-name)
-  "Delete VALUE-NAME on `w32-resume-emacs-registry-key'
+(defun w32-resume-frame--delete-registry (value-name)
+  "Delete VALUE-NAME on `w32-resume-frame-emacs-registry-key'
 from windows registry."
-  (call-process w32-resume-reg-program nil nil nil
-		"delete" w32-resume-emacs-registry-key
+  (call-process w32-resume-frame-reg-program nil nil nil
+		"delete" w32-resume-frame-emacs-registry-key
 		"/v" value-name
 		"/f"))
 
-(defun w32-resume--query-registry (value-name)
-  "Fetch VALUE-NAME value on `w32-resume-emacs-registry-key'
+(defun w32-resume-frame--query-registry (value-name)
+  "Fetch VALUE-NAME value on `w32-resume-frame-emacs-registry-key'
 in windows registry."
   (with-temp-buffer
     (when (eq 0 (call-process "reg" nil (current-buffer) nil
-			      "query" "hkcu\\software\\gnu\\emacs"
+			      "query" w32-resume-frame-emacs-registry-key
 			      "/v" value-name
 			      ))
       (goto-char (point-min))
@@ -107,44 +107,44 @@ in windows registry."
 		       (regexp-quote value-name)) nil t)
 	  (match-string-no-properties 1))))))
 
-(defun w32-resume-activate ()
+(defun w32-resume-frame-activate ()
   "Activate storing frame statuses."
   (interactive)
-  (add-hook 'kill-emacs-hook 'w32-resume--store-frame-status))
+  (add-hook 'kill-emacs-hook 'w32-resume-frame--store-frame-status))
 
-(defun w32-resume-deactivate ()
+(defun w32-resume-frame-deactivate ()
   "Deactivate storing frame statuses."
   (interactive)
-  (w32-resume--storing-status-off)
-  (w32-resume--clean-frame-status)
-  (remove-hook 'kill-emacs-hook 'w32-resume--store-frame-status))
+  (w32-resume-frame--storing-status-off)
+  (w32-resume-frame--clean-frame-status)
+  (remove-hook 'kill-emacs-hook 'w32-resume-frame--store-frame-status))
 
-(defvar w32-resume-stored-status-cache nil
-  "Cache for `w32-resume-stored-p' function result.")
+(defvar w32-resume-frame-stored-status-cache nil
+  "Cache for `w32-resume-frame-stored-p' function result.")
 
-(defun w32-resume-stored-p ()
+(defun w32-resume-frame-stored-p ()
   "Return non-nil if frame status stored in windows registry."
-  (when (eq 1 (or w32-resume-stored-status-cache
-		  (setq w32-resume-stored-status-cache
-			(if (w32-resume--query-registry w32-resume-storing-status-name)
+  (when (eq 1 (or w32-resume-frame-stored-status-cache
+		  (setq w32-resume-frame-stored-status-cache
+			(if (w32-resume-frame--query-registry w32-resume-frame-storing-status-name)
 			    1 0))))
     t))
 
-(defun w32-resume--storing-status-on ()
+(defun w32-resume-frame--storing-status-on ()
   "Turn on storing status."
-  (w32-resume--add-registry w32-resume-storing-status-name "")
-  (setq w32-resume-stored-status-cache nil))
+  (w32-resume-frame--add-registry w32-resume-frame-storing-status-name "")
+  (setq w32-resume-frame-stored-status-cache nil))
 
-(defun w32-resume--storing-status-off ()
+(defun w32-resume-frame--storing-status-off ()
   "Turn off storing status."
-  (w32-resume--delete-registry w32-resume-storing-status-name)
-  (setq w32-resume-stored-status-cache nil))
+  (w32-resume-frame--delete-registry w32-resume-frame-storing-status-name)
+  (setq w32-resume-frame-stored-status-cache nil))
 
-(defun w32-resume--store-frame-status ()
-  "Store frame status values described by `w32-resume-registry-value-alist'
+(defun w32-resume-frame--store-frame-status ()
+  "Store frame status values described by `w32-resume-frame-registry-value-alist'
 into windows registry."
-  (w32-resume--storing-status-on)
-  (dolist (cur w32-resume-registry-value-alist)
+  (w32-resume-frame--storing-status-on)
+  (dolist (cur w32-resume-frame-registry-value-alist)
     (let ((value-name (car cur))
 	  (type (cadr cur))
 	  (param (caddr cur))
@@ -155,8 +155,8 @@ into windows registry."
 
       (cond
        ((eq type 'bool)
-	(w32-resume--add-registry value-name
-				  (w32-resume--bool-encoder
+	(w32-resume-frame--add-registry value-name
+				  (w32-resume-frame--bool-encoder
 				   (if framep
 				       (frame-parameter nil param)
 				     (symbol-value param)))))
@@ -165,22 +165,22 @@ into windows registry."
 			 (frame-parameter nil param)
 		       (symbol-value param))))
 	  (if value
-	      (w32-resume--add-registry value-name (prin1-to-string value t))
-	    (w32-resume--delete-registry value-name))))
+	      (w32-resume-frame--add-registry value-name (prin1-to-string value t))
+	    (w32-resume-frame--delete-registry value-name))))
        ((eq type 'func)
 	(let ((result (ignore-errors (funcall param))))
 	  (if result
-	      (w32-resume--add-registry value-name result)
-	    (w32-resume--delete-registry value-name))))
+	      (w32-resume-frame--add-registry value-name result)
+	    (w32-resume-frame--delete-registry value-name))))
        
        ))))
 
-(defun w32-resume--clean-frame-status ()
-  "Delete frame status values described by `w32-resume-registry-value-alist'
+(defun w32-resume-frame--clean-frame-status ()
+  "Delete frame status values described by `w32-resume-frame-registry-value-alist'
 from windows registry."
-  (dolist (cur w32-resume-registry-value-alist)
+  (dolist (cur w32-resume-frame-registry-value-alist)
     (let ((value-name (car cur)))
-      (w32-resume--delete-registry value-name))))
+      (w32-resume-frame--delete-registry value-name))))
 
 (provide 'w32-resume-frame)
 
