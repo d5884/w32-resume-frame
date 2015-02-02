@@ -45,6 +45,7 @@
     ("Emacs.VerticalScrollBars" bool   scroll-bar-mode)
     ("Emacs.ScrollBarWidth"     [obj]  scroll-bar-width)
     ("Emacs.LineSpacing"        [obj]  line-spacing)
+    ("Emacs.FullScreen"         [obj]  fullscreen)
     )
   "Alist of registry value and value encoding method.
 An element consists of (VALUE-NAME METHOD PARAM).
